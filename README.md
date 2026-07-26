@@ -110,8 +110,6 @@ Measured against **38 real UT99 maps** (For extra detail see the last section of
 
 ## Limitations
 
-Organized by design consideration:
-
 - **Fuzzy geometry core.** Vertex identity is reconstructed from coordinates via distance epsilons rather than exact identity. This is the root cause of the residual non-manifold cases and is the motivation for the planned major refactor.
 - **Non-manifold residue.** ~34 brush splits across 5 maps cannot be closed watertight. Some are genuinely defective input (flipped triangles, zero-thickness geometry in a shape that's supposed to be watertight, concave polygons) that the tool marks honestly.
 - **Geometry & basics only.** Brushes, lights, movers (no behavior replication yet) and player starts are converted. Game logic, triggers, keyframe animation, and most entity properties are **not** translated.
