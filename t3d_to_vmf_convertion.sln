@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34309.116
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "t3d_to_vmf_convertion", "t3d_to_vmf_convertion\t3d_to_vmf_convertion.csproj", "{ABBFBD6A-42B0-4DEA-A640-3E1DB77DE81E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "t3d_to_vmf_convertion.Tests", "t3d_to_vmf_convertion.Tests\t3d_to_vmf_convertion.Tests.csproj", "{18052A58-2C64-47E0-9696-1CA44E8F0D0D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{ABBFBD6A-42B0-4DEA-A640-3E1DB77DE81E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ABBFBD6A-42B0-4DEA-A640-3E1DB77DE81E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ABBFBD6A-42B0-4DEA-A640-3E1DB77DE81E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ABBFBD6A-42B0-4DEA-A640-3E1DB77DE81E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{18052A58-2C64-47E0-9696-1CA44E8F0D0D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{18052A58-2C64-47E0-9696-1CA44E8F0D0D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{18052A58-2C64-47E0-9696-1CA44E8F0D0D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{18052A58-2C64-47E0-9696-1CA44E8F0D0D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1C6B2295-953D-4C03-B606-BD69360A099E}
+	EndGlobalSection
+EndGlobal
