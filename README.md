@@ -117,6 +117,8 @@ Organized by design consideration:
 - **Geometry & basics only.** Brushes, lights, movers (no behavior replication yet) and player starts are converted. Game logic, triggers, keyframe animation, and most entity properties are **not** translated.
 - **No brush sheering.** UT's sheer transform is not applied (not yet encountered).
 - **Cross-platform, Windows-tested.** Plain .NET 8 console app — builds/runs on Windows, Linux, and macOS. Drag-and-drop is a Windows-only convenience (use a CLI argument elsewhere); development is Windows-based.
+- **Garbage in Hammer.** There can be garbage corrupt brushes in your hammer due to several reasons: Tiny brush split/Bad plane coordinates/Out-of-bounds brush. This will all be taken care of (as most of the other problems) as the tool progresses. The garbage can be safely removed. Some brushes may have "too short edges", but at least in Hammer++ these can be fixed/tolerated via Alt+P menu
+- **No CSG.** Self-explanatory, the CSG will be implemented once the decomposition is stable and well-written (See Planned section)
 
 ---
 
