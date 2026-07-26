@@ -1,6 +1,6 @@
-# UT99 `.t3d` → GMod/Source `.vmf` Converter
+# UT99 `.t3d` → Source `.vmf` Converter
 
-**A console tool that converts Unreal Tournament 99 (targeted) map exports (`.t3d`) into Valve `.vmf` files for Hammer Map Editor — including full concave-brush CSG decomposition into convex Source solids.**
+**A console tool that converts Unreal Tournament 99 (targeted) map exports (`.t3d`) into Valve `.vmf` files for Hammer Map Editor (GMod targeted) — including full concave-brush decomposition into convex Source solids.**
 
 ![.NET](https://img.shields.io/badge/.NET-8.0-512BD4)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%C2%B7%20Linux%20%C2%B7%20macOS-blue)
@@ -51,9 +51,9 @@ Open the resulting `.vmf` in Hammer. (Hammer++ preferred as most testing was don
 Requires the **.NET 8 SDK**.
 
 ```bash
-git clone <this-repo>
-cd t3d_to_vmf_convertion
-dotnet build -c Release
+git clone https://github.com/Majestic12-DX/t3d-to-vmf-convertion
+cd t3d-to-vmf-convertion
+dotnet build t3d_to_vmf_convertion -c Release
 ```
 
 ---
