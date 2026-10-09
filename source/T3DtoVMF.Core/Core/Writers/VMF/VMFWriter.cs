@@ -6,13 +6,12 @@ using SourceModels;
 
 public class VMFWriter
 {
-    private static readonly string _VMF_FOLDER = "t3d_to_vmf_vmfs";
     private static readonly int MAX_BRUSHES = 8192;
 
     private HashSet<Vector> _uniqueVertices = new();
     private Dictionary<string, string> _currentChunkData = new();
     private Stack<string> _chunks = new();
-    private StreamWriter? _writer = null;
+    private TextWriter? _writer = null;
 
     private int _uniqueVertsCount = 0;
     private int _brushesCount = 0;
@@ -66,93 +65,97 @@ public class VMFWriter
     #endregion
     #region Writing VMFs
 
-    public bool WriteVMFFromUnrealActors(List<BaseActor> actors, string fileName)
+    public bool WriteVMFFromUnrealActors(List<BaseActor> actors, TextWriter vmfText)
     {
         if (actors is null) return false;
 
+        _writer = vmfText;
         _uniqueVertices.Clear();
         _currentChunkData.Clear();
         _chunks.Clear();
 
-        Directory.CreateDirectory(_VMF_FOLDER);
+        _brushesCount = 0;
+        _badBrushesCount = 0;
+        _badBrushSidesCount = 0;
+        _uniqueVertsCount = 0;
 
-        fileName = $"{Path.GetFileName(fileName)} {DateTime.Now:yyyy-MM-dd HH-mm-ss}.vmf";
-        string filePath = Path.Combine(_VMF_FOLDER, fileName);
-
-        Logger.Write(LogLevel.INFO, $"Writing {Path.GetFileName(filePath)} from Unreal Actors");
+        Logger.Write(LogLevel.INFO, $"Writing .vmf from Unreal Actors");
 
         var sw = Stopwatch.StartNew();
-        _writer = new StreamWriter(filePath, true);
-        _writer.AutoFlush = true;
 
         // All that decomposition shouldn't be done here, but it's temporary before input repair + csg pass
 
-        List<VMFBase> vmfObjects = new();
-        foreach (var actor in actors)
+        VMFMap vmf = new();
+        try
         {
-            VMFBase? currentVMFObject;
-            if (actor is BrushActor brush)
+            List<VMFBase> vmfObjects = new();
+            foreach (var actor in actors)
             {
-                // Some of these are area-portals. Need to identify them using polygon bit flags
-                // As it also seems is that each brush polygon can have its own flags, independently
-                // It can lead to dumb scenarios where brush needs to be treated as a non-manifold, too?..
-                if (brush.Type == UTBrushType.NonManifold)
+                VMFBase? currentVMFObject;
+                if (actor is BrushActor brush)
                 {
-                    if (brush.GetPolygonsAsBrushes(out var polygonBrushes))
+                    // Some of these are area-portals. Need to identify them using polygon bit flags
+                    // As it also seems is that each brush polygon can have its own flags, independently
+                    // It can lead to dumb scenarios where brush needs to be treated as a non-manifold, too?..
+                    if (brush.Type == UTBrushType.NonManifold)
                     {
-                        foreach (var polygonBrush in polygonBrushes)
+                        if (brush.GetPolygonsAsBrushes(out var polygonBrushes))
                         {
-                            currentVMFObject = UnrealActorToVMF.ConvertToVMF(polygonBrush);
-                            if (currentVMFObject is null) continue;
+                            foreach (var polygonBrush in polygonBrushes)
+                            {
+                                currentVMFObject = UnrealActorToVMF.ConvertToVMF(polygonBrush);
+                                if (currentVMFObject is null) continue;
 
-                            vmfObjects.Add(currentVMFObject);
+                                vmfObjects.Add(currentVMFObject);
+                            }
                         }
+
+                        // OBJWriter.WriteOBJFromUnrealBrush(brush, brush.Name);
+
+                        continue;
                     }
 
-                    // OBJWriter.WriteOBJFromUnrealBrush(brush, brush.Name);
-
-                    continue;
-                }
-
-                if (brush.Type == UTBrushType.Concave)
-                {
-                    if (brush.GetDecomposedConcave(out var brushSplits))
+                    if (brush.Type == UTBrushType.Concave)
                     {
-                        foreach (var brushSplit in brushSplits)
+                        if (brush.GetDecomposedConcave(out var brushSplits))
                         {
-                            currentVMFObject = UnrealActorToVMF.ConvertToVMF(brushSplit);
-                            if (currentVMFObject is null) continue;
+                            foreach (var brushSplit in brushSplits)
+                            {
+                                currentVMFObject = UnrealActorToVMF.ConvertToVMF(brushSplit);
+                                if (currentVMFObject is null) continue;
 
-                            vmfObjects.Add(currentVMFObject);
+                                vmfObjects.Add(currentVMFObject);
+                            }
                         }
-                    }
 
-                    continue;
+                        continue;
+                    }
+                    else if (brush.Type != UTBrushType.Convex) { OBJWriter.WriteOBJFromUnrealBrush(brush, brush.Name); continue; }
+                    else OBJWriter.WriteOBJFromUnrealBrush(brush, brush.Name);
                 }
-                else if (brush.Type != UTBrushType.Convex) { OBJWriter.WriteOBJFromUnrealBrush(brush, brush.Name); continue; }
-                else OBJWriter.WriteOBJFromUnrealBrush(brush, brush.Name);
+
+                currentVMFObject = UnrealActorToVMF.ConvertToVMF(actor);
+                if (currentVMFObject is null) continue;
+
+                vmfObjects.Add(currentVMFObject);
             }
 
-            currentVMFObject = UnrealActorToVMF.ConvertToVMF(actor);
-            if (currentVMFObject is null) continue;
+            // TODO: This sucks ass, should make a method for this
+            foreach (var vmfObject in vmfObjects)
+            {
+                if (vmfObject is VMFSolid vmfSolid)
+                    vmf.World.Solids.Add(vmfSolid);
+                else if (vmfObject is VMFBaseEntity vmfEntity)
+                    vmf.Entities.Add(vmfEntity);
+            }
 
-            vmfObjects.Add(currentVMFObject);
+            vmf.WriteToStream(this);
+            _writer.Flush();
         }
-
-        // TODO: This sucks ass, should make a method for this
-        VMFMap vmf = new();
-        foreach (var vmfObject in vmfObjects)
+        finally
         {
-            if (vmfObject is VMFSolid vmfSolid)
-                vmf.World.Solids.Add(vmfSolid);
-            else if (vmfObject is VMFBaseEntity vmfEntity)
-                vmf.Entities.Add(vmfEntity);
+            _writer = null;
         }
-
-        vmf.WriteToStream(this);
-
-        _writer.Dispose();
-        _writer = null;
 
         sw.Stop();
         Logger.Write(LogLevel.INFO, $"Constructed .vmf in presumably {sw.ElapsedMilliseconds} ms");

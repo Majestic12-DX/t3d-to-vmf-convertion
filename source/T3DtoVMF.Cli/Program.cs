@@ -54,7 +54,12 @@ class Program
 
         try
         {
-            vmfWriter.WriteVMFFromUnrealActors(actors, fileName);
+            string folder = "t3d_to_vmf_vmfs";
+            Directory.CreateDirectory(folder);
+
+            string vmfName = $"{Path.GetFileNameWithoutExtension(fileName)} {DateTime.Now:yyyy-MM-dd HH-mm-ss}.vmf";
+            using var vmfText = new StreamWriter(Path.Combine(folder, vmfName));
+            vmfWriter.WriteVMFFromUnrealActors(actors, vmfText);
         }
         catch (Exception ex)
         {
