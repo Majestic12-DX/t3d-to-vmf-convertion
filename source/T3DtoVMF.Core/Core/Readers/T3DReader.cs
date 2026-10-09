@@ -193,14 +193,14 @@ public class T3DReader
         return new Vector(x, y, z);
     }
 
-    public List<BaseActor> ReadT3DActors(string filePath)
+    public List<BaseActor> ReadT3DActors(TextReader textToRead)
     {
-        Logger.Write(LogLevel.INFO, $"Reading {Path.GetFileName(filePath)}");
+        Logger.Write(LogLevel.INFO, $"Started reading .t3d stream");
 
         var sw = Stopwatch.StartNew();
-        using var reader = new StreamReader(filePath);
 
-        _actors.Clear();
+        // was .Clear() before, but it affected it everywhere
+        _actors = new();
 
         _stack.Clear();
         _stack.Push(ReadingState.Searching);
@@ -209,7 +209,7 @@ public class T3DReader
         _currentPolygon = null;
 
         string? currentLine;
-        while ((currentLine = reader.ReadLine()) != null)
+        while ((currentLine = textToRead.ReadLine()) != null)
         {
             _lineCount++;
             currentLine = currentLine.Trim();
@@ -253,8 +253,12 @@ public class T3DReader
             _pendingActor.Properties.Add((_lineCount, key, currentLine));
         }
 
+        // Safety first, or in this case, last
+        if (_stack.Count != 1 || _pendingActor is not null)
+            ThrowFormatException("File ended while reading an actor");
+
         sw.Stop();
-        Logger.Write(LogLevel.INFO, $"Read .t3d in presumably {sw.ElapsedMilliseconds} ms");
+        Logger.Write(LogLevel.INFO, $"Read .t3d with {_actors.Count} actors in presumably {sw.ElapsedMilliseconds} ms");
 
         return _actors;
     }
@@ -497,7 +501,7 @@ public class T3DReader
                     int keyPosIndex = ExtractIndexFromLine(line, "KeyPos");
                     if (keyPosIndex < 0 || keyPosIndex >= 8)
                     {
-                        Logger.Write(LogLevel.ERROR, $"Read invalid mover KeyPos {keyPosIndex} at ${_lineCount}. Skipping");
+                        Logger.Write(LogLevel.ERROR, $"Read invalid mover KeyPos {keyPosIndex} at {_lineCount}. Skipping");
                         break;
                     }
 

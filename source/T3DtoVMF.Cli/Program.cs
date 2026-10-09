@@ -40,7 +40,8 @@ class Program
 
         try
         {
-            actors = t3dReader.ReadT3DActors(filePath);
+            using var t3dText = new StreamReader(filePath);
+            actors = t3dReader.ReadT3DActors(t3dText);
         }
         catch (Exception ex)
         {
