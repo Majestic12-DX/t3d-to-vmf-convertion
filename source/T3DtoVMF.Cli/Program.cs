@@ -18,52 +18,46 @@ class Program
             return Close.OnPress(Close.BadArguments);
         }
 
-        List<string> t3dsToConvert = new();
-        for (int i = 0; i < args.Length; i++)
-        {
-            string t3dPath = args[i];
-            if (Path.GetExtension(t3dPath).ToLower() != ".t3d")
-            {
-                Console.WriteLine($"Warning: Unknown arg {t3dPath}! Skipping");
-                continue;
-            }
-
-            if (!File.Exists(t3dPath))
-            {
-                Console.WriteLine($"Error: {Path.GetFileName(t3dPath)} not found! Skipping");
-                Close.SetExitCodeIfWorse(Close.FileMissing);
-
-                continue;
-            }
-
-            t3dsToConvert.Add(t3dPath);
-        }
-
-        if (t3dsToConvert.Count == 0)
+        CliOptions options = ArgsHandler.Parse(args);
+        if (options.T3ds.Count == 0)
         {
             Console.WriteLine($"Error: No .t3d files to work with");
             return Close.OnPress(Close.BadArguments);
         }
 
         string vmfFolder = "t3d_to_vmf_vmfs";
-        string objFolder = "t3d_to_vmf_objs";
-        for (int i = 0; i < t3dsToConvert.Count; i++)
-        {
-            string t3dPath = t3dsToConvert[i];
-            string fileName = Path.GetFileName(t3dPath);
-            Title.Update($"{fileName} {i + 1}/{t3dsToConvert.Count}");
+        string logFolder = "t3d_to_vmf_logs";
+        string baseObjFolder = "t3d_to_vmf_objs";
 
-            using var logger = new CLILogger(fileName);
+        if (options.OutputFolder is not null)
+        {
+            vmfFolder = Path.Combine(options.OutputFolder, vmfFolder);
+            logFolder = Path.Combine(options.OutputFolder, logFolder);
+            baseObjFolder = Path.Combine(options.OutputFolder, baseObjFolder);
+        }
+
+        for (int i = 0; i < options.T3ds.Count; i++)
+        {
+            string t3dPath = options.T3ds[i];
+            string fileName = Path.GetFileName(t3dPath);
+            Title.Update($"{fileName} {i + 1}/{options.T3ds.Count}");
+
+            using var logger = new CLILogger(fileName, options.LoggingLevel, options.NoLogFile ? null : logFolder);
+
+            string objFolderName = $"{Path.GetFileNameWithoutExtension(fileName)} {Time.Now()}";
+            string objFolder = Path.Combine(baseObjFolder, objFolderName);
 
             var data = new ConversionData
             {
-                LogCallback = logger.Write,
-                OBJWriterCreator = name => new StreamWriter(Path.Combine(objFolder, name))
+                LogCallback = options.LoggingLevel == LogLevel.NONE ? null : logger.Write,
+                OBJWriterCreator = options.NoOBJ ? null : name => new StreamWriter(Path.Combine(objFolder, name))
             };
 
             try
             {
-                Directory.CreateDirectory(objFolder);
+                if (!options.NoOBJ)
+                    Directory.CreateDirectory(objFolder);
+
                 Directory.CreateDirectory(vmfFolder);
 
                 string vmfName = $"{Path.GetFileNameWithoutExtension(fileName)} {Time.Now()}.vmf";

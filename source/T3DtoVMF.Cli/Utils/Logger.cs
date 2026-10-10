@@ -2,21 +2,29 @@
 {
     sealed class CLILogger : IDisposable
     {
-        private const string _logFolder = "t3d_to_vmf_logs";
         private readonly StreamWriter? _file;
         private static readonly Dictionary<LogLevel, ConsoleColor> _colors = new()
-    {
-        { LogLevel.INFO, ConsoleColor.Cyan },
-        { LogLevel.WARNING, ConsoleColor.Yellow },
-        { LogLevel.ERROR, ConsoleColor.Red },
-        { LogLevel.DEBUG, ConsoleColor.DarkGreen },
-    };
-
-        public CLILogger(string t3dFileName)
         {
+            { LogLevel.INFO, ConsoleColor.Cyan },
+            { LogLevel.WARNING, ConsoleColor.Yellow },
+            { LogLevel.ERROR, ConsoleColor.Red },
+            { LogLevel.DEBUG, ConsoleColor.DarkGreen },
+        };
+
+        private readonly string? _logFolder;
+        private LogLevel _loggingLevel;
+
+        public CLILogger(string t3dFileName, LogLevel loggingLevel, string? folder)
+        {
+            _loggingLevel = loggingLevel;
+            _logFolder = folder;
+
+            if (_logFolder is null || _loggingLevel == LogLevel.NONE) return;
+
             try
             {
                 Directory.CreateDirectory(_logFolder);
+
                 string logName = $"{Path.GetFileName(t3dFileName)} {Time.Now()}.log";
                 _file = new StreamWriter(Path.Combine(_logFolder, logName)) { AutoFlush = true };
             }
@@ -28,12 +36,10 @@
 
         public void Write(LogLevel level, string message)
         {
+            if (level > _loggingLevel) return;
+
             string line = $"[{Time.Now()}] [{level}] {message}";
             _file?.WriteLine(line);
-
-#if !DEBUG
-        if (level == LogLevel.DEBUG) return;
-#endif
 
             Console.ForegroundColor = _colors[level];
             Console.WriteLine(line);
