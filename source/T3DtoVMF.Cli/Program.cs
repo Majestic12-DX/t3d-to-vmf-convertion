@@ -128,7 +128,7 @@ class Program
             return Close.OnPress(Close.UnexpectedError);
         }
 
-        Console.WriteLine($"Convertation Result: " +
+        logger.Write(LogLevel.INFO, $"Convertation Result: " +
             $"\n\t{result.TotalTime} time taken, " +
             $"\n\t{result.BrushCount} brushes" +
             $"\n\t{result.BrushSidesCount} brush sides" +
