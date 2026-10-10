@@ -1,15 +1,14 @@
 ﻿namespace T3DtoVMF.Core.Public
 {
-    public struct ConversionResult
+    public sealed record ConversionResult
     {
-        public TimeSpan T3DReadTime { get; internal set; } = TimeSpan.Zero;
-        public TimeSpan VMFWriteTime { get; internal set; } = TimeSpan.Zero;
+        public TimeSpan T3DReadTime { get; init; }
+        public TimeSpan VMFWriteTime { get; init; }
         public TimeSpan TotalTime => T3DReadTime + VMFWriteTime;
-        public int BrushCount { get; internal set; } = 0;
-        public int BrushSidesCount { get; internal set; } = 0;
-        public int BadBrushCount { get; internal set; } = 0;
-        public int BadBrushSidesCount { get; internal set; } = 0;
-        public int UniqueVerticesCount { get; internal set; } = 0;
-        public ConversionResult() { }
+        public int BrushCount { get; init; }
+        public int BrushSidesCount { get; init; }
+        public int BadBrushCount { get; init; }
+        public int BadBrushSidesCount { get; init; }
+        public int UniqueVerticesCount { get; init; }
     }
 }

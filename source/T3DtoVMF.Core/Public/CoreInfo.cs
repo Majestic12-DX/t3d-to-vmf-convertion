@@ -2,6 +2,6 @@
 {
     public static class CoreInfo
     {
-        public const string Version = "2026.10.10.11";
+        public const string Version = "2026.10.10.12";
     }
 }
