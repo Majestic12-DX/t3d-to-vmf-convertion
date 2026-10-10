@@ -1,5 +1,6 @@
 ﻿public enum LogLevel
 {
+    NONE, // For custom loggers to ignore messages
     INFO,
     WARNING,
     ERROR,
