@@ -74,8 +74,8 @@ class Program
     // Test Files: Every .t3d in Unreal Tournament Maps folder
     static int Main(string[] args)
     {
-        string version = "Version 1.3";
-        string title = $"UT99 .t3d to .vmf Converter | {version}";
+        string version = CoreInfo.Version;
+        string title = $"UT99 .t3d to .vmf Converter | v{version}";
         Console.Title = title;
 
         // Basic File Checking

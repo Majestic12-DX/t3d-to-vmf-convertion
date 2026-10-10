@@ -1,0 +1,11 @@
+#!/bin/sh
+CORE="source/T3DtoVMF.Core"
+CORE_INFO="$CORE/Public/CoreInfo.cs"
+
+git diff --cached --quiet -- "$CORE" && exit 0
+
+BUILD=$(( $(git rev-list --count --since="$(date +%Y-%m-%d) 00:00" HEAD -- "$CORE") + 1 ))
+VERSION="$(date +%Y.%m.%d).$BUILD"
+# -b keeps CRLF line endings: Git Bash sed strips them otherwise
+sed -b -i "s/\(public const string Version = \)\".*\"/\1\"$VERSION\"/" "$CORE_INFO"
+git add "$CORE_INFO"
