@@ -10,19 +10,40 @@ static class Time
 
 static class Close
 {
+    // How "bad" is the error code depends on how high the value is
     public const int Success = 0;
-    public const int BadT3D = 1;
-    public const int UnexpectedError = 2;
-    public const int BadArguments = 3;
-    public static int OnPress(int exitCode = Success)
+    public const int FileMissing = 1;
+    public const int BadT3D = 2;
+    public const int UnexpectedError = 3;
+    public const int BadArguments = 4;
+    private static int ExitCode { get; set; } = Success;
+    public static int OnPress(int exitCode = 0)
     {
+        if (exitCode != 0) ExitCode = exitCode;
+
         // Launched by something that isn't a user
-        if (Console.IsInputRedirected) return exitCode;
+        if (Console.IsInputRedirected) return ExitCode;
 
         Console.WriteLine("Press any button to exit...");
         Console.ReadKey();
 
-        return exitCode;
+        return ExitCode;
+    }
+    public static bool SetExitCodeIfWorse(int exitCode)
+    {
+        bool isWorse = exitCode > ExitCode;
+        if (isWorse) ExitCode = exitCode;
+
+        return isWorse;
+    }
+}
+
+static class Title
+{
+    public static void Update(string extra = "")
+    {
+        string version = CoreInfo.Version;
+        Console.Title = $"UT99 .t3d to .vmf Converter | v{version} | {extra}";
     }
 }
 
@@ -77,67 +98,90 @@ class Program
     // Test Files: Every .t3d in Unreal Tournament Maps folder
     static int Main(string[] args)
     {
-        string version = CoreInfo.Version;
-        string title = $"UT99 .t3d to .vmf Converter | v{version}";
-        Console.Title = title;
+        Title.Update();
 
         // Basic File Checking
         if (args.Length == 0)
         {
-            Console.WriteLine("Error: Please drag'n'drop a .t3d file into this application!");
+            Console.WriteLine("Error: Launched with no args! For example, try drag'n'dropping a .t3d into this tool");
             return Close.OnPress(Close.BadArguments);
         }
 
-        string filePath = args[0];
-        if (Path.GetExtension(filePath).ToLower() != ".t3d")
+        List<string> t3dsToConvert = new();
+        for (int i = 0; i < args.Length; i++)
         {
-            Console.WriteLine($"Error: File Extension is not .t3d ({Path.GetFileName(filePath)})");
+            string t3dPath = args[i];
+            if (Path.GetExtension(t3dPath).ToLower() != ".t3d")
+            {
+                Console.WriteLine($"Warning: Unknown arg {t3dPath}! Skipping");
+                continue;
+            }
+
+            if (!File.Exists(t3dPath))
+            {
+                Console.WriteLine($"Error: {Path.GetFileName(t3dPath)} not found! Skipping");
+                Close.SetExitCodeIfWorse(Close.FileMissing);
+
+                continue;
+            }
+
+            t3dsToConvert.Add(t3dPath);
+        }
+
+        if (t3dsToConvert.Count == 0)
+        {
+            Console.WriteLine($"Error: No .t3d files to work with");
             return Close.OnPress(Close.BadArguments);
         }
 
-        string fileName = Path.GetFileName(filePath);
-        using var logger = new CLILogger(fileName);
-
+        string vmfFolder = "t3d_to_vmf_vmfs";
         string objFolder = "t3d_to_vmf_objs";
-
-        Directory.CreateDirectory(objFolder); 
-        var data = new ConversionData
+        for (int i = 0; i < t3dsToConvert.Count; i++)
         {
-            LogCallback = logger.Write,
-            OBJWriterCreator = name => new StreamWriter(Path.Combine(objFolder, name))
-        };
+            string t3dPath = t3dsToConvert[i];
+            string fileName = Path.GetFileName(t3dPath);
+            Title.Update($"{fileName} {i + 1}/{t3dsToConvert.Count}");
 
-        ConversionResult result;
-        try
-        {
-            using var t3dText = new StreamReader(filePath);
+            using var logger = new CLILogger(fileName);
 
-            string folder = "t3d_to_vmf_vmfs";
-            Directory.CreateDirectory(folder);
+            var data = new ConversionData
+            {
+                LogCallback = logger.Write,
+                OBJWriterCreator = name => new StreamWriter(Path.Combine(objFolder, name))
+            };
 
-            string vmfName = $"{Path.GetFileNameWithoutExtension(fileName)} {Time.Now()}.vmf";
-            using var vmfText = new StreamWriter(Path.Combine(folder, vmfName));
+            try
+            {
+                Directory.CreateDirectory(objFolder);
+                Directory.CreateDirectory(vmfFolder);
 
-            result = T3DtoVMFConverter.Convert(t3dText, vmfText, data);
+                string vmfName = $"{Path.GetFileNameWithoutExtension(fileName)} {Time.Now()}.vmf";
+                string vmfPath = Path.Combine(vmfFolder, vmfName);
+
+                using var t3dText = new StreamReader(t3dPath);
+                using var vmfText = new StreamWriter(vmfPath);
+
+                ConversionResult result = T3DtoVMFConverter.Convert(t3dText, vmfText, data);
+
+                logger.Write(LogLevel.INFO, $"Conversion Result: " +
+                    $"\n\t{result.TotalTime} time taken, " +
+                    $"\n\t{result.BrushCount} brushes" +
+                    $"\n\t{result.BrushSidesCount} brush sides" +
+                    $"\n\t{result.BadBrushCount} bad brushes" +
+                    $"\n\t{result.BadBrushSidesCount} bad brush sides" +
+                    $"\n\t{result.UniqueVerticesCount} unique vertices\n");
+            }
+            catch (FormatException ex)
+            {
+                logger.Write(LogLevel.ERROR, $"Format Exception, bad .t3d: {ex.Message}");
+                Close.SetExitCodeIfWorse(Close.BadT3D);
+            }
+            catch (Exception ex)
+            {
+                logger.Write(LogLevel.ERROR, $"Unexpected Exception: {ex}");
+                Close.SetExitCodeIfWorse(Close.UnexpectedError);
+            }
         }
-        catch (FormatException ex)
-        {
-            logger.Write(LogLevel.ERROR, $"Format Exception, bad .t3d: {ex.Message}");
-            return Close.OnPress(Close.BadT3D);
-        }
-        catch (Exception ex)
-        {
-            logger.Write(LogLevel.ERROR, $"Unexpected Exception: {ex}");
-            return Close.OnPress(Close.UnexpectedError);
-        }
-
-        logger.Write(LogLevel.INFO, $"Convertation Result: " +
-            $"\n\t{result.TotalTime} time taken, " +
-            $"\n\t{result.BrushCount} brushes" +
-            $"\n\t{result.BrushSidesCount} brush sides" +
-            $"\n\t{result.BadBrushCount} bad brushes" +
-            $"\n\t{result.BadBrushSidesCount} bad brush sides" +
-            $"\n\t{result.UniqueVerticesCount} unique vertices\n");
 
         return Close.OnPress();
     }
