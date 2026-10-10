@@ -16,6 +16,9 @@ static class Close
     public const int BadArguments = 3;
     public static int OnPress(int exitCode = Success)
     {
+        // Launched by something that isn't a user
+        if (Console.IsInputRedirected) return exitCode;
+
         Console.WriteLine("Press any button to exit...");
         Console.ReadKey();
 
