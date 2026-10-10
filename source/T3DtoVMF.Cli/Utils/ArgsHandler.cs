@@ -23,44 +23,44 @@
                         string? value = GetArg(args, ++i);
                         if (value is null)
                         {
-                            Console.WriteLine("Warning: -loglevel needs a valid log level value");
+                            Console.Error.WriteLine("Warning: -loglevel needs a valid log level value");
                             break;
                         }
                         bool success = Enum.TryParse(value, true, out LogLevel consoleLogLevel);
                         if (success && Enum.IsDefined(typeof(LogLevel), consoleLogLevel))
                             options.LoggingLevel = consoleLogLevel;
                         else
-                            Console.WriteLine($"Warning: Invalid value for -loglevel");
+                            Console.Error.WriteLine($"Warning: Invalid value for -loglevel");
                         break;
                     
                     case "-outputfolder":
                         string? outputFolder = GetArg(args, ++i);
                         if (outputFolder is null)
                         {
-                            Console.WriteLine("Warning: -outputfolder needs a valid directory path");
+                            Console.Error.WriteLine("Warning: -outputfolder needs a valid directory path");
                             break;
                         }
 
                         if (File.Exists(outputFolder))
                         {
-                            Console.WriteLine($"Warning: -outputfolder {outputFolder} is a file! Skipping");
+                            Console.Error.WriteLine($"Warning: -outputfolder {outputFolder} is a file! Skipping");
                             break;
                         }
 
                         options.OutputFolder = outputFolder;
 
                         break;
-                    
+
                     default:
                         if (!Path.GetExtension(arg).Equals(".t3d", StringComparison.OrdinalIgnoreCase))
                         {
-                            Console.WriteLine($"Warning: Unknown arg {arg}! Skipping");
+                            Console.Error.WriteLine($"Warning: Unknown arg {arg}! Skipping");
                             break;
                         }
 
                         if (!File.Exists(arg))
                         {
-                            Console.WriteLine($"Error: {Path.GetFileName(arg)} not found! Skipping");
+                            Console.Error.WriteLine($"Error: {Path.GetFileName(arg)} not found! Skipping");
                             Close.SetExitCodeIfWorse(Close.FileMissing);
 
                             break;

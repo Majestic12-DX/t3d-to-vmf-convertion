@@ -30,7 +30,7 @@
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Couldn't create log file, logging to console only: {ex.Message}");
+                Console.Error.WriteLine($"Couldn't create log file, logging to console only: {ex.Message}");
             }
         }
 
@@ -42,9 +42,9 @@
             _file?.WriteLine(line);
 
             Console.ForegroundColor = _colors[level];
-            Console.WriteLine(line);
+            Console.Error.WriteLine(line);
 
-            if (level == LogLevel.ERROR) Console.WriteLine();
+            if (level == LogLevel.ERROR) Console.Error.WriteLine();
 
             Console.ResetColor();
         }

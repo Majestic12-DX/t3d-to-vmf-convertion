@@ -1,11 +1,14 @@
 ﻿// Been a long time since I worked with C#
 // Love both of these engines, to be honest :)
 
+using System.Text.Json;
 using T3DtoVMF.Cli.Utils;
 using T3DtoVMF.Core.Public;
 
 class Program
 {
+    private static readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web);
+
     // Test Files: Every .t3d in Unreal Tournament Maps folder
     static int Main(string[] args)
     {
@@ -14,14 +17,14 @@ class Program
         // Basic File Checking
         if (args.Length == 0)
         {
-            Console.WriteLine("Error: Launched with no args! For example, try drag'n'dropping a .t3d into this tool");
+            Console.Error.WriteLine("Error: Launched with no args! For example, try drag'n'dropping a .t3d into this tool");
             return Close.OnPress(Close.BadArguments);
         }
 
         CliOptions options = ArgsHandler.Parse(args);
         if (options.T3ds.Count == 0)
         {
-            Console.WriteLine($"Error: No .t3d files to work with");
+            Console.Error.WriteLine($"Error: No .t3d files to work with");
             return Close.OnPress(Close.BadArguments);
         }
 
@@ -68,13 +71,12 @@ class Program
 
                 ConversionResult result = T3DtoVMFConverter.Convert(t3dText, vmfText, data);
 
-                logger.Write(LogLevel.INFO, $"Conversion Result: " +
-                    $"\n\t{result.TotalTime} time taken, " +
-                    $"\n\t{result.BrushCount} brushes" +
-                    $"\n\t{result.BrushSidesCount} brush sides" +
-                    $"\n\t{result.BadBrushCount} bad brushes" +
-                    $"\n\t{result.BadBrushSidesCount} bad brush sides" +
-                    $"\n\t{result.UniqueVerticesCount} unique vertices\n");
+                // Called by some process that needs info
+                if (Console.IsOutputRedirected)
+                {
+                    var output = new { Map = fileName, OutputFolder = Path.GetFullPath(options.OutputFolder ?? Directory.GetCurrentDirectory()), Result = result };
+                    Console.WriteLine(JsonSerializer.Serialize(output, _jsonOptions));
+                }
             }
             catch (FormatException ex)
             {

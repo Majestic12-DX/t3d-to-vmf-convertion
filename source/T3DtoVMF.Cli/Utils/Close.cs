@@ -16,7 +16,7 @@
             // Launched by something that isn't a user
             if (Console.IsInputRedirected) return ExitCode;
 
-            Console.WriteLine("Press any button to exit...");
+            Console.Error.WriteLine("Press any button to exit...");
             Console.ReadKey();
 
             return ExitCode;
