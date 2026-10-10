@@ -1,5 +1,4 @@
 using UTModels;
-using System.Diagnostics;
 using System.Globalization;
 
 // Rewritten T3DReader (PendingActor is the reason why)
@@ -197,8 +196,6 @@ public class T3DReader
     {
         Logger.Write(LogLevel.INFO, $"Started reading .t3d stream");
 
-        var sw = Stopwatch.StartNew();
-
         // was .Clear() before, but it affected it everywhere
         _actors = new();
 
@@ -257,8 +254,7 @@ public class T3DReader
         if (_stack.Count != 1 || _pendingActor is not null)
             ThrowFormatException("File ended while reading an actor");
 
-        sw.Stop();
-        Logger.Write(LogLevel.INFO, $"Read .t3d with {_actors.Count} actors in presumably {sw.ElapsedMilliseconds} ms");
+        Logger.Write(LogLevel.INFO, $"Read .t3d with {_actors.Count} actors");
 
         return _actors;
     }

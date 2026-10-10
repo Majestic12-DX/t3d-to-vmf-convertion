@@ -1,8 +1,17 @@
 ﻿using UTModels;
-using System.Diagnostics;
 using SourceModels;
 
 // Should really get a BaseWriter...
+
+public struct VMFResult
+{
+    public int BrushCount { get; internal set; } = 0;
+    public int BrushSidesCount { get; internal set; } = 0;
+    public int BadBrushCount { get; internal set; } = 0;
+    public int BadBrushSidesCount { get; internal set; } = 0;
+    public int UniqueVerticesCount { get; internal set; } = 0;
+    public VMFResult() { }
+}
 
 public class VMFWriter
 {
@@ -65,9 +74,9 @@ public class VMFWriter
     #endregion
     #region Writing VMFs
 
-    public bool WriteVMFFromUnrealActors(List<BaseActor> actors, TextWriter vmfText)
+    public VMFResult WriteVMFFromUnrealActors(List<BaseActor> actors, TextWriter vmfText)
     {
-        if (actors is null) return false;
+        ArgumentNullException.ThrowIfNull(actors, "actors list is null");
 
         _writer = vmfText;
         _uniqueVertices.Clear();
@@ -80,8 +89,6 @@ public class VMFWriter
         _uniqueVertsCount = 0;
 
         Logger.Write(LogLevel.INFO, $"Writing .vmf from Unreal Actors");
-
-        var sw = Stopwatch.StartNew();
 
         // All that decomposition shouldn't be done here, but it's temporary before input repair + csg pass
 
@@ -157,14 +164,19 @@ public class VMFWriter
             _writer = null;
         }
 
-        sw.Stop();
-        Logger.Write(LogLevel.INFO, $"Constructed .vmf in presumably {sw.ElapsedMilliseconds} ms");
         Logger.Write(LogLevel.INFO, $"Counted {vmf.GetBrushCount()} brushes, {vmf.GetBrushSidesCount()} brush faces and {_uniqueVertsCount} unique !geometric! vertices");
 
         if (_badBrushesCount > 0 || _badBrushSidesCount > 0)
             Logger.Write(LogLevel.WARNING, $"Counted {_badBrushesCount} bad brushes and {_badBrushSidesCount} bad brush faces");
 
-        return true;
+        return new VMFResult
+        {
+            BrushCount = vmf.GetBrushCount(),
+            BrushSidesCount = vmf.GetBrushSidesCount(),
+            BadBrushCount = _badBrushesCount,
+            BadBrushSidesCount = _badBrushSidesCount,
+            UniqueVerticesCount = _uniqueVertsCount
+        };
     }
     #endregion
 }
