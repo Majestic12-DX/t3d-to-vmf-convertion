@@ -2,14 +2,14 @@
 
 namespace UTModels
 {
-    public class BaseActor
+    class BaseActor
     {
         public string Class { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public string Tag { get; set; } = string.Empty;
         public string Event { get; set; } = string.Empty;
-        internal Vector Position { get; set; } = new Vector();
-        internal Angle Angle { get; set; } = new Angle();
+        public Vector Position { get; set; } = new Vector();
+        public Angle Angle { get; set; } = new Angle();
         public Dictionary<string, string> Properties { get; set; } = new();
 
         // Debug Info

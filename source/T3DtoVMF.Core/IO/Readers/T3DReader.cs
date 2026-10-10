@@ -11,7 +11,7 @@ using System.Globalization;
     Otherwise we'll have to find another way of extracting map information
 */ // WARNING //
 
-public class T3DReader
+class T3DReader
 {
     private enum ReadingState
     {

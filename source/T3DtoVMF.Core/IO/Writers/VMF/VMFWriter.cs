@@ -3,7 +3,7 @@ using SourceModels;
 
 // Should really get a BaseWriter...
 
-public struct VMFResult
+struct VMFResult
 {
     public int BrushCount { get; internal set; } = 0;
     public int BrushSidesCount { get; internal set; } = 0;
@@ -13,7 +13,7 @@ public struct VMFResult
     public VMFResult() { }
 }
 
-public class VMFWriter
+class VMFWriter
 {
     private static readonly int MAX_BRUSHES = 8192;
 
