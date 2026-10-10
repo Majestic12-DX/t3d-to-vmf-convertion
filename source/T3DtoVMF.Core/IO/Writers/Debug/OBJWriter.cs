@@ -5,9 +5,7 @@ using UTModels;
 
 static class OBJWriter
 {
-    private static readonly string _OBJ_FOLDER = "t3d_to_vmf_objs";
-
-    private static StreamWriter? _writer = null;
+    private static TextWriter? _writer = null;
 
     private static void WriteLine(string line = "")
     {
@@ -19,6 +17,11 @@ static class OBJWriter
 
     public static bool WriteOBJFromUnrealBrush(BrushActor brush, string fileName)
     {
+        var streamWriterCreator = Settings.Data.OBJWriterCreator;
+        if (streamWriterCreator is null)
+            return false;
+
+
         // Temp hack
         if (!brush.Transformed)
         {
@@ -26,21 +29,18 @@ static class OBJWriter
             return false;
         }
 
-        Directory.CreateDirectory(_OBJ_FOLDER);
-
         fileName = $"{Path.GetFileName(fileName)} {brush.Type}.obj";
-        string filePath = Path.Combine(_OBJ_FOLDER, fileName);
 
         try { 
-            _writer = new StreamWriter(filePath); 
+            _writer = streamWriterCreator.Invoke(fileName);
+            if (_writer is null)
+                return false;
         }
         catch (Exception ex) 
         { 
-            Logger.Write(LogLevel.WARNING, $"OBJ Write aborted ({Path.GetFileName(filePath)}): {ex.Message}"); _writer = null; 
+            Logger.Write(LogLevel.WARNING, $"OBJ Write aborted ({fileName}): {ex.Message}"); _writer = null; 
             return false; 
         }
-
-        _writer.AutoFlush = false;
 
         #region Brush Data Comments
         WriteComment("Brush Data included");
