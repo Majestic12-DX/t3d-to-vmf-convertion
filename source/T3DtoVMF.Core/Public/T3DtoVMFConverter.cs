@@ -2,11 +2,13 @@
 
 namespace T3DtoVMF.Core.Public
 {
-    public class T3DtoVMFConverter
+    public static class T3DtoVMFConverter
     {
-        public ConversionResult Convert(TextReader t3d, TextWriter vmf, ConversionData data)
+        public static ConversionResult Convert(TextReader t3d, TextWriter vmf, ConversionData data)
         {
             Settings.Data = data;
+
+            Logger.Write(LogLevel.INFO, $"Started Conversion");
 
             try
             {
@@ -17,6 +19,8 @@ namespace T3DtoVMF.Core.Public
                 var writeTimer = Stopwatch.StartNew();
                 var stats = new VMFWriter().WriteVMFFromUnrealActors(actors, vmf);
                 writeTimer.Stop();
+
+                Logger.Write(LogLevel.INFO, "Finished Conversion");
 
                 return new ConversionResult
                 {
