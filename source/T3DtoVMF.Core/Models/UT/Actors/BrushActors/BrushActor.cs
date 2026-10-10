@@ -477,7 +477,7 @@ namespace UTModels
                 return false;
             }
 
-            string polygonType = isFront ? "FS" : "BS";
+            string polygonType = isFront ? "F" : "B";
             string splitName = $"{Name}_{polygonType}";
 
             HashSet<Vector> intersectionVertices = new(new VectorComparer());
