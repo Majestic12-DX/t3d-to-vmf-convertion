@@ -21,8 +21,11 @@ class Program
             return Close.OnPress(Close.BadArguments);
         }
 
-        CliOptions options = ArgsHandler.Parse(args);
-        if (options.T3ds.Count == 0)
+        CliOptions cliOptions;
+        ConversionOptions conversionOptions;
+        (cliOptions, conversionOptions) = ArgsHandler.Parse(args);
+
+        if (cliOptions.T3ds.Count == 0)
         {
             Console.Error.WriteLine($"Error: No .t3d files to work with");
             return Close.OnPress(Close.BadArguments);
@@ -32,33 +35,34 @@ class Program
         string logFolder = "t3d_to_vmf_logs";
         string baseObjFolder = "t3d_to_vmf_objs";
 
-        if (options.OutputFolder is not null)
+        if (cliOptions.OutputFolder is not null)
         {
-            vmfFolder = Path.Combine(options.OutputFolder, vmfFolder);
-            logFolder = Path.Combine(options.OutputFolder, logFolder);
-            baseObjFolder = Path.Combine(options.OutputFolder, baseObjFolder);
+            vmfFolder = Path.Combine(cliOptions.OutputFolder, vmfFolder);
+            logFolder = Path.Combine(cliOptions.OutputFolder, logFolder);
+            baseObjFolder = Path.Combine(cliOptions.OutputFolder, baseObjFolder);
         }
 
-        for (int i = 0; i < options.T3ds.Count; i++)
+        for (int i = 0; i < cliOptions.T3ds.Count; i++)
         {
-            string t3dPath = options.T3ds[i];
+            string t3dPath = cliOptions.T3ds[i];
             string fileName = Path.GetFileName(t3dPath);
-            Title.Update($"{fileName} {i + 1}/{options.T3ds.Count}");
+            Title.Update($"{fileName} {i + 1}/{cliOptions.T3ds.Count}");
 
-            using var logger = new CLILogger(fileName, options.LoggingLevel, options.NoLogFile ? null : logFolder);
+            using var logger = new CLILogger(fileName, cliOptions.LoggingLevel, cliOptions.NoLogFile ? null : logFolder);
 
             string objFolderName = $"{Path.GetFileNameWithoutExtension(fileName)} {Time.Now()}";
             string objFolder = Path.Combine(baseObjFolder, objFolderName);
 
             var data = new ConversionData
             {
-                LogCallback = options.LoggingLevel == LogLevel.NONE ? null : logger.Write,
-                OBJWriterCreator = options.NoOBJ ? null : name => new StreamWriter(Path.Combine(objFolder, name))
+                LogCallback = cliOptions.LoggingLevel == LogLevel.NONE ? null : logger.Write,
+                OBJWriterCreator = cliOptions.NoOBJ ? null : name => new StreamWriter(Path.Combine(objFolder, name)),
+                Options = conversionOptions
             };
 
             try
             {
-                if (!options.NoOBJ)
+                if (!cliOptions.NoOBJ)
                     Directory.CreateDirectory(objFolder);
 
                 Directory.CreateDirectory(vmfFolder);
@@ -74,7 +78,7 @@ class Program
                 // Called by some process that needs info
                 if (Console.IsOutputRedirected)
                 {
-                    var output = new { Map = fileName, OutputFolder = Path.GetFullPath(options.OutputFolder ?? Directory.GetCurrentDirectory()), Result = result };
+                    var output = new { Map = fileName, OutputFolder = Path.GetFullPath(cliOptions.OutputFolder ?? Directory.GetCurrentDirectory()), Result = result };
                     Console.WriteLine(JsonSerializer.Serialize(output, _jsonOptions));
                 }
             }
