@@ -152,6 +152,11 @@ class VMFWriter
             {
                 if (vmfObject is VMFSolid vmfSolid)
                     vmf.World.Solids.Add(vmfSolid);
+                else if (vmfObject is VMFWorld levelInfoWorld)
+                {
+                    vmf.World.Message = levelInfoWorld.Message;
+                    vmf.World.ChapterTitle = levelInfoWorld.ChapterTitle;
+                }
                 else if (vmfObject is VMFBaseEntity vmfEntity)
                     vmf.Entities.Add(vmfEntity);
             }
