@@ -94,6 +94,14 @@ namespace T3DtoVMF.Cli.Utils
                         conversionOptions.TryNonManifoldPlanarHolesFixing = true;
                         break;
 
+                    case "-disablefuncdetail_nonmanifold":
+                        conversionOptions.DisableFuncDetail_NonManifold = true;
+                        break;
+
+                    case "-disablefuncdetail_semisolid":
+                        conversionOptions.DisableFuncDetail_SemiSolid = true;
+                        break;
+
                     case "-skipconcave":
                         conversionOptions.SkipConcave = true;
                         break;
@@ -118,6 +126,10 @@ namespace T3DtoVMF.Cli.Utils
                         conversionOptions.NoMoverBehavior = true;
                         break;
 
+                    case "-nobreakables":
+                        conversionOptions.NoBreakables = true;
+                        break;
+
                     case "-noareaportals":
                         conversionOptions.NoAreaPortals = true;
                         break;
@@ -128,6 +140,10 @@ namespace T3DtoVMF.Cli.Utils
 
                     case "-nolights":
                         conversionOptions.NoLights = true;
+                        break;
+
+                    case "-nolights_unrealsetup":
+                        conversionOptions.NoLights_UnrealSetup = true;
                         break;
 
                     case "-noplayerspawns":

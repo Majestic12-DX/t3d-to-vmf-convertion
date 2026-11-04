@@ -8,16 +8,31 @@
         // Additionaly, sometimes there may be holes by accident (AS-Guardia rock formations in the spawn cave)
         // This shouldn't touch brushes that genuinely are supposed to be non-manifold
         // Although, you never know what mapper intended, that's why this'll be behind a flag
+        // Could probably use aggressive holes fixing? 2-planes hole that may have a shared edge between planes, for example
+        // Chaining planar holes with shared edges from real vertices
+        // If repaired state still gives non-manifold, use original geometry and accept the non-manifold fallback
         public bool TryNonManifoldPlanarHolesFixing { get; set; }
+
+        public bool DisableFuncDetail_NonManifold { get; set; }
+        public bool DisableFuncDetail_SemiSolid { get; set; }
+        public bool DisableFuncDetail_Additives { get; set; } // Check volume of original UT brush before applying func_detail?
 
         public bool SkipConcave { get; set; }
         public bool SkipConvex { get; set; }
         public bool SkipNonManifold { get; set; }
         public bool SkipMovers { get; set; }
+
         public bool NoCSG { get; set; } // Skip the magic of translating Subtractive World CSG to Additive World
         public bool NoMoverBehavior { get; set; }
         public bool NoAreaPortals { get; set; } // Do not convert Unreal area portals
-        public bool NoOutOfBounds { get; set; } // Skip brushes that have at least 1 vertex outside Source world bounds (16384 units)
+
+        // Some Unreal brushes are "destroyable" (as far as I know they are simple semisolid movers going out of bounds super fast on damage)
+        public bool NoBreakables { get; set; }
+
+        // Skip brushes that have at least 1 vertex outside Source world bounds (16384 units)
+        // Could probably use "truncate if possible" mode?
+        public bool NoOutOfBounds { get; set; }
+
         public double Scale { get; set; } = 1;
 
         // Walkable Surface in Source is a surface that has normal with z coord be at least 0.7
@@ -48,7 +63,10 @@
         }
 
         public bool NoLights { get; set; }
+        public bool NoLights_UnrealSetup { get; set; } // Lights will just carry over their color and nothing else
+
         public bool NoPlayerSpawns { get; set; }
         public bool IncludeActive { get; set; } // CSG_Active, CSG_Intersect and CSG_Deintersect brushes are not map geometry, skipped by default
+        public bool IncludeModelsAsBrushes { get; set; } // MH-DinoPlanet2011[THUNDERBOLT] is mostly 1 model??? Hey, at least whole CSG should already be done!
     }
 }
