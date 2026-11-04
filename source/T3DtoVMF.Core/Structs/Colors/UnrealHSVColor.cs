@@ -1,11 +1,15 @@
-﻿readonly struct UnrealHSVColor
+readonly struct UnrealHSVColor
 {
-    public byte Hue { get; }
-    public byte Saturation { get; }
-    public byte Brightness { get; }
+    // Default Unreal values
+    public byte Hue { get; } = 0;
+    public byte Saturation { get; } = 255;
+    public byte Brightness { get; } = 64;
 
-    // Default UT Values
-    public UnrealHSVColor(byte hue = 0, byte saturation = 255, byte brightness = 64)
+    // Struct properties set their default values only when constructor runs, and I only figured that out now..
+    // = new() in LightActor.cs skips the one with 3 bytes, so empty one is needed
+    public UnrealHSVColor() { }
+
+    public UnrealHSVColor(byte hue, byte saturation, byte brightness)
     {
         Hue = hue;
         Saturation = saturation;
@@ -22,46 +26,43 @@
     // Some data from UnrealEd:
     // Hue (0 = Red, 45 = Yellow, 80 = Green, 135 = Some Oceanish Color, 170 = Blue, 180 = Something Purple, 225 = Pink and slightly red, 255 = Red) (0-255)
     // Saturation means how "white" is our light.. kind of impacts non-primary colors of the light, increasing them (0-255)
-    // Brightness seems to be maximum color value (0-255)
+    // Brightness is not part of the color, it's a separate linear multiplier (LightBrightness / 255), so it goes to 4th _light value
     // This works more like a spectrum, rather than a combination of basic colors
 
-    // TODO: This still fails sometimes on some light colors???
+    // Port of UT99 Engine.dll FGetHSV, the way Render.dll calls it for lights: FGetHSV(LightHue, LightSaturation, 255)
     public RGBColor ToRGB()
     {
-        // How much "far" we are in the current sector
-        double hueNormalized = (Hue * 6) / 255f;
-
-        // Saturation is inversed in UT
-        double saturationPercent = 1f - Saturation / 255f;
-        
-        // This just means maximum RGB color value
-        byte maxBrightness = Brightness;
-
-        // Current color sector
-        int hueSector = (int)Math.Floor(hueNormalized);
-        double sectorFragment = hueNormalized - hueSector;
-
-        // Lowest color value achievable
-        byte lowValue = (byte)(maxBrightness * (1f - saturationPercent));
-
-        // Color that is fading out in the current hue sector
-        byte fallingValue = (byte)(maxBrightness * (1f - saturationPercent * sectorFragment));
-
-        // Color that is fading in in the current hue sector
-        byte risingValue = (byte)(maxBrightness * (1f - saturationPercent * (1f - sectorFragment)));
-
-        byte red, green, blue;
-        switch (hueSector)
+        float redFraction, greenFraction, blueFraction;
+        if (Hue < 86)
         {
-            case 0: red = maxBrightness; green = risingValue; blue = lowValue; break; // Red -> Yellow (0-45 range)
-            case 1: red = fallingValue; green = maxBrightness; blue = lowValue; break; // Yellow -> Green (45-80 range)
-            case 2: red = lowValue; green = maxBrightness; blue = risingValue; break; // Green -> Oceanish (80-135 range)
-            case 3: red = lowValue; green = fallingValue; blue = maxBrightness; break; // Oceanish -> Blue (135-170 range)
-            case 4: red = risingValue; green = lowValue; blue = maxBrightness; break; // Blue -> Pink (170-225 range)
-            default: red = maxBrightness; green = lowValue; blue = fallingValue; break; // Pink -> Red (225-255 range)
+            redFraction = (85 - Hue) / 85f;
+            greenFraction = Hue / 85f;
+            blueFraction = 0;
+        }
+        else if (Hue < 171)
+        {
+            redFraction = 0;
+            greenFraction = (170 - Hue) / 85f;
+            blueFraction = (Hue - 85) / 85f;
+        }
+        else
+        {
+            redFraction = (Hue - 170) / 85f;
+            greenFraction = 0;
+            blueFraction = (255 - Hue) / 84f;
         }
 
-        Logger.Write(LogLevel.DEBUG, $"Converted Unreal HSV Light ({Hue} {Saturation} {Brightness}) -> RGB ({red} {green} {blue})");
-        return new RGBColor(red, green, blue);
+        // Saturation is inverted
+        float colorBrightnessMul = Saturation / 255f;
+        redFraction += colorBrightnessMul * (1 - redFraction);
+        greenFraction += colorBrightnessMul * (1 - greenFraction);
+        blueFraction += colorBrightnessMul * (1 - blueFraction);
+
+        byte red = (byte)Math.Round(redFraction * 255);
+        byte green = (byte)Math.Round(greenFraction * 255);
+        byte blue = (byte)Math.Round(blueFraction * 255);
+
+        Logger.Write(LogLevel.DEBUG, $"Converted Unreal HSV Light ({Hue} {Saturation} {Brightness}) -> RGB ({red} {green} {blue} {Brightness})");
+        return new RGBColor(red, green, blue, Brightness);
     }
 }
