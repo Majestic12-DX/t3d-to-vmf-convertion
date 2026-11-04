@@ -254,6 +254,9 @@ class T3DReader
         if (_stack.Count != 1 || _pendingActor is not null)
             ThrowFormatException("File ended while reading an actor");
 
+        if (_actors.Count == 0)
+            ThrowFormatException("File had 0 actors");
+
         Logger.Write(LogLevel.INFO, $"Read .t3d with {_actors.Count} actors");
 
         return _actors;
@@ -402,6 +405,10 @@ class T3DReader
             // "Normal" intentionally not read — recomputed from vertices for more accuracy and stability. Might regret later
             // Update: No, I did not
             // Update 2: I'm not sure
+            // Update 3: Unreal itself seems to recompute normals when importing .t3d?
+
+            case "normal":
+                break;
 
             case "textureu":
                 _currentPolygon.TextureU = ExtractVectorFromPolygonLine(line);
@@ -537,9 +544,9 @@ class T3DReader
         }
     }
 
-    private void SetValue<T>(string line, string key, Action<T> setter) where T : struct, IParsable<T>
+    private void SetValue<T>(string line, string key, Action<T> callback) where T : struct, IParsable<T>
     {
         if (T.TryParse(ExtractStringValueFromLine(line, key), null, out T value))
-            setter(value);
+            callback(value);
     }
 }
