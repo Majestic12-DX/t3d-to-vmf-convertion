@@ -79,7 +79,7 @@ static class UnrealActorToVMF
     {
         VMFLight vmfLight = new VMFLight();
         vmfLight.Color = light.HSVColor.ToRGB();
-        vmfLight.Distance = light.Radius;
+        vmfLight.Distance = 25 * (light.Radius + 1); // Engine.dll 0x101173E0: WorldLightRadius = 25 * (LightRadius + 1)
 
         return vmfLight;
     }
