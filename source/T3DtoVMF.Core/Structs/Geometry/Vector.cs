@@ -256,11 +256,8 @@ readonly struct Vector : IEquatable<Vector>
         return new Vector(xAfterYaw, yAfterYaw, z);
     }
 
-    // Set to 1.33x or 0.75? Unreal Unit = 1.905~ cm, Source Unit = 1~ inch (2.54~ cm)
-    private const double SourceScale = 1;
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Vector GetSourcePositionFromUnrealPosition(Vector vec) => new Vector(vec.X, -vec.Y, vec.Z) * SourceScale;
+    public static Vector GetSourcePositionFromUnrealPosition(Vector vec) => new Vector(vec.X, -vec.Y, vec.Z);
 
     #region Operators
 
@@ -329,27 +326,26 @@ readonly struct Vector : IEquatable<Vector>
 
     public override string ToString() => $"(X: {X} Y: {Y} Z: {Z})";
 
-    private static readonly double HAMMER_COORD_MIN = -16383f;
-    private static readonly double HAMMER_COORD_MAX = 16383f;
+    // I hope Rubat accepts that 32768 bounds support request..
+    // Unreal 1 has 32768 world bounds, come on!
+    private static readonly double HAMMER_COORD_MIN = -16384;
+    private static readonly double HAMMER_COORD_MAX = 16384;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public (double X, double Y, double Z) GetVMFCoords(double margin = 0f)
+    public (double X, double Y, double Z) GetVMFCoords(double margin = 0)
     {
         return (
-            GetSnappedValue(Math.Clamp(X, HAMMER_COORD_MIN + margin, HAMMER_COORD_MAX - margin)),
-            GetSnappedValue(Math.Clamp(Y, HAMMER_COORD_MIN + margin, HAMMER_COORD_MAX - margin)),
-            GetSnappedValue(Math.Clamp(Z, HAMMER_COORD_MIN + margin, HAMMER_COORD_MAX - margin))
+            Math.Clamp(X, HAMMER_COORD_MIN + margin, HAMMER_COORD_MAX - margin),
+            Math.Clamp(Y, HAMMER_COORD_MIN + margin, HAMMER_COORD_MAX - margin),
+            Math.Clamp(Z, HAMMER_COORD_MIN + margin, HAMMER_COORD_MAX - margin)
         );
     }
 
-    private static readonly int decimals = (int)Math.Round(-Math.Log10(CoordinateEpsilon));
-    private static readonly string decimalsFormat = $"F{decimals}";
+    private static readonly string _vmfCoordFormat = "0.####";
     public string ToVMFString()
     {
         var vmfCoords = GetVMFCoords();
-        return string.Format(
-            CultureInfo.InvariantCulture,
-            $"{{0:{decimalsFormat}}} {{1:{decimalsFormat}}} {{2:{decimalsFormat}}}",
+        return string.Format(CultureInfo.InvariantCulture, $"{{0:{_vmfCoordFormat}}} {{1:{_vmfCoordFormat}}} {{2:{_vmfCoordFormat}}}",
             vmfCoords.X,
             vmfCoords.Y,
             vmfCoords.Z
