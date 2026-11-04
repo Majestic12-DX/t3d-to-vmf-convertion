@@ -78,7 +78,7 @@ class Program
                 // Called by some process that needs info
                 if (Console.IsOutputRedirected)
                 {
-                    var output = new { Map = fileName, OutputFolder = Path.GetFullPath(cliOptions.OutputFolder ?? Directory.GetCurrentDirectory()), Result = result };
+                    var output = new { Version = CoreInfo.Version, Map = fileName, Result = result };
                     Console.WriteLine(JsonSerializer.Serialize(output, _jsonOptions));
                 }
             }
