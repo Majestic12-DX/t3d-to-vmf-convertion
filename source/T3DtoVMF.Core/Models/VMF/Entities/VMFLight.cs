@@ -1,4 +1,6 @@
-﻿namespace SourceModels
+using System.Globalization;
+
+namespace SourceModels
 {
     class VMFLight : VMFBasePlaceableEntity
     {
@@ -9,7 +11,10 @@
         {
             base.WriteChunkData(vmfWriter);
 
-            vmfWriter.AddChunkData("_distance", Distance.ToString());
+            vmfWriter.AddChunkData("_distance", Distance.ToString(CultureInfo.InvariantCulture));
+            vmfWriter.AddChunkData("_fifty_percent_distance", (Distance / 2).ToString(CultureInfo.InvariantCulture));
+            vmfWriter.AddChunkData("_zero_percent_distance", Distance.ToString(CultureInfo.InvariantCulture));
+            vmfWriter.AddChunkData("_hardfalloff", "1");
             vmfWriter.AddChunkData("_light", Color.ToString());
         }
     }
