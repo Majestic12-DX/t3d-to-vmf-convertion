@@ -25,7 +25,7 @@
             {
                 Directory.CreateDirectory(_logFolder);
 
-                string logName = $"{Path.GetFileName(t3dFileName)} {Time.Now()}.log";
+                string logName = $"{Path.GetFileName(t3dFileName)}.log";
                 _file = new StreamWriter(Path.Combine(_logFolder, logName)) { AutoFlush = true };
             }
             catch (Exception ex)

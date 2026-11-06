@@ -67,9 +67,17 @@ namespace T3DtoVMF.Cli.Utils
                         }
 
                         cliOptions.OutputFolder = outputFolder;
-
                         break;
 
+                    case "-vmftostream":
+                        cliOptions.VMFToOutputStream = true;
+                        break;
+
+                    case "-writeresultjsonfile":
+                        cliOptions.WriteResultJSONFile = true;
+                        break;
+
+                    // Assume this is .t3d file path
                     default:
                         if (!Path.GetExtension(arg).Equals(".t3d", StringComparison.OrdinalIgnoreCase))
                         {

@@ -4,6 +4,8 @@
     {
         public bool NoOBJ { get; set; }
         public bool NoLogFile { get; set; }
+        public bool VMFToOutputStream { get; set; }
+        public bool WriteResultJSONFile { get; set; }
         public LogLevel LoggingLevel { get; set; } =
 #if DEBUG
     LogLevel.DEBUG;

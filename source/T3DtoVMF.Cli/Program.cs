@@ -32,12 +32,15 @@ class Program
         }
 
         string vmfFolder = "t3d_to_vmf_vmfs";
+        string jsonFolder = "t3d_to_vmf_jsons";
         string logFolder = "t3d_to_vmf_logs";
         string baseObjFolder = "t3d_to_vmf_objs";
+        string currentTime = Time.Now();
 
         if (cliOptions.OutputFolder is not null)
         {
             vmfFolder = Path.Combine(cliOptions.OutputFolder, vmfFolder);
+            jsonFolder = Path.Combine(cliOptions.OutputFolder, jsonFolder);
             logFolder = Path.Combine(cliOptions.OutputFolder, logFolder);
             baseObjFolder = Path.Combine(cliOptions.OutputFolder, baseObjFolder);
         }
@@ -48,10 +51,10 @@ class Program
             string fileName = Path.GetFileName(t3dPath);
             Title.Update($"{fileName} {i + 1}/{cliOptions.T3ds.Count}");
 
-            using var logger = new CLILogger(fileName, cliOptions.LoggingLevel, cliOptions.NoLogFile ? null : logFolder);
+            string fileNameForSubDirectories = $"{Path.GetFileNameWithoutExtension(fileName)} {currentTime}";
+            using var logger = new CLILogger(fileNameForSubDirectories, cliOptions.LoggingLevel, cliOptions.NoLogFile ? null : logFolder);
 
-            string objFolderName = $"{Path.GetFileNameWithoutExtension(fileName)} {Time.Now()}";
-            string objFolder = Path.Combine(baseObjFolder, objFolderName);
+            string objFolder = Path.Combine(baseObjFolder, fileNameForSubDirectories);
 
             var data = new ConversionData
             {
@@ -65,21 +68,28 @@ class Program
                 if (!cliOptions.NoOBJ)
                     Directory.CreateDirectory(objFolder);
 
-                Directory.CreateDirectory(vmfFolder);
+                if (!cliOptions.VMFToOutputStream)
+                    Directory.CreateDirectory(vmfFolder);
 
-                string vmfName = $"{Path.GetFileNameWithoutExtension(fileName)} {Time.Now()}.vmf";
+                string vmfName = fileNameForSubDirectories + ".vmf";
                 string vmfPath = Path.Combine(vmfFolder, vmfName);
 
                 using var t3dText = new StreamReader(t3dPath);
-                using var vmfText = new StreamWriter(vmfPath);
+                using var vmfText = cliOptions.VMFToOutputStream ? new StreamWriter(Console.OpenStandardOutput()) : new StreamWriter(vmfPath);
 
                 ConversionResult result = T3DtoVMFConverter.Convert(t3dText, vmfText, data);
 
-                // Called by some process that needs info
-                if (Console.IsOutputRedirected)
+                if (cliOptions.WriteResultJSONFile)
                 {
+                    Directory.CreateDirectory(jsonFolder);
+
+                    string jsonName = fileNameForSubDirectories + ".json";
+                    string jsonPath = Path.Combine(jsonFolder, jsonName);
+
+                    using var jsonStream = new StreamWriter(jsonPath);
+
                     var output = new { Version = CoreInfo.Version, Map = fileName, Result = result };
-                    Console.WriteLine(JsonSerializer.Serialize(output, _jsonOptions));
+                    jsonStream.WriteLine(JsonSerializer.Serialize(output, _jsonOptions));
                 }
             }
             catch (FormatException ex)
