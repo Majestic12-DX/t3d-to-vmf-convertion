@@ -51,7 +51,7 @@ class Program
             string fileName = Path.GetFileName(t3dPath);
             Title.Update($"{fileName} {i + 1}/{cliOptions.T3ds.Count}");
 
-            string fileNameForSubDirectories = $"{Path.GetFileNameWithoutExtension(fileName)} {currentTime}";
+            string fileNameForSubDirectories = Path.GetFileNameWithoutExtension(fileName) + (cliOptions.NoTimestamp ? "" : $" {currentTime}");
             using var logger = new CLILogger(fileNameForSubDirectories, cliOptions.LoggingLevel, cliOptions.NoLogFile ? null : logFolder);
 
             string objFolder = Path.Combine(baseObjFolder, fileNameForSubDirectories);

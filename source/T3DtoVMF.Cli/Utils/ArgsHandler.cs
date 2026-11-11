@@ -69,6 +69,10 @@ namespace T3DtoVMF.Cli.Utils
                         cliOptions.OutputFolder = outputFolder;
                         break;
 
+                    case "-notimestamp":
+                        cliOptions.NoTimestamp = true;
+                        break;
+
                     case "-vmftostream":
                         cliOptions.VMFToOutputStream = true;
                         break;
